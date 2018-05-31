@@ -1,4 +1,7 @@
 <resources>
-    <string name="app_name">OMGAndriodNew</string>
+    <string name="app_name">Bookmaster General</string>
+    <string name="textview">Search For Books!</string>
+    <string name="button">Search</string>
+    <string name="activity_details">Book Details</string>
     <string name="hello_world">lusir andriod test</string>
 </resources>

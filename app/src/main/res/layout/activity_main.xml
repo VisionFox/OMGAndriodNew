@@ -24,7 +24,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_below="@+id/main_textView"
-            android:text="Update The TextView" />
+            android:text="Search" />
 
         <ImageView
             android:layout_width="40dp"

@@ -1,5 +1,6 @@
 package com.followme.lusir.omgandriodnew;
 
+import android.app.ProgressDialog;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
@@ -14,8 +15,8 @@ import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.view.Window;
 import android.widget.AdapterView;
-import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ListView;
@@ -24,7 +25,13 @@ import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.loopj.android.http.AsyncHttpClient;
+import com.loopj.android.http.JsonHttpResponseHandler;
 
+import org.json.JSONObject;
+
+import java.io.UnsupportedEncodingException;
+import java.net.URLEncoder;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -33,14 +40,19 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     private TextView mTextView;
     private EditText mEditText;
 
+    private ProgressDialog progressDialog;
+
     private Button mButton;
     private ListView mListView;
     private List<String> mNameList;
-    private ArrayAdapter mArrayAdapter;
+    //    private ArrayAdapter mArrayAdapter;
+    private JSONAdapter mJsonAdapter;
     private ShareActionProvider mShareActionProvider;
     private static final String PREFS = "prefs";
     private static final String PREF_NAME = "name";
     SharedPreferences mSharedPreferences;
+
+    private static final String QUERY_URL = "http://openlibrary.org/search.json?q=";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -54,11 +66,16 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         mListView = findViewById(R.id.main_listview);
         mEditText = findViewById(R.id.main_edit_text);
 
-        mArrayAdapter = new ArrayAdapter(this, android.R.layout.simple_list_item_1, mNameList);
-        mListView.setAdapter(mArrayAdapter);
-
         mButton.setOnClickListener(this);
         mListView.setOnItemClickListener(this);
+
+        //ver1.0的遗留
+//        mArrayAdapter = new ArrayAdapter(this, android.R.layout.simple_list_item_1, mNameList);
+//        mListView.setAdapter(mArrayAdapter);
+
+
+        mJsonAdapter = new JSONAdapter(this, getLayoutInflater());
+        mListView.setAdapter(mJsonAdapter);
 
 
         displayWelcome();
@@ -104,23 +121,38 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     public void onClick(View view) {
         switch (view.getId()) {
             case R.id.main_button:
-//                mTextView.setText("change");
+              /*  //改变textview
+                mTextView.setText("change");
+                */
+
+
+
+                /*
+                //更新listview
                 String name = mEditText.getText().toString();
                 mNameList.add(name);
                 //一定要刷新
                 mArrayAdapter.notifyDataSetChanged();
                 mEditText.setText("");
+                */
+
+                queryBooks(mEditText.getText().toString());
+
                 break;
             default:
                 break;
         }
     }
 
+
     @Override
     public void onItemClick(AdapterView<?> adapterView, View view, int position, long id) {
-        Log.d("omg android", position + " : " + mNameList.get(position));
+//       ver1.0遗留
+//        Log.d("omg android", position + " : " + mNameList.get(position));
+
     }
 
+    //分享功能
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         getMenuInflater().inflate(R.menu.main, menu);
@@ -144,5 +176,46 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             shareIntent.putExtra(Intent.EXTRA_TEXT, mTextView.getText());
             mShareActionProvider.setShareIntent(shareIntent);
         }
+    }
+
+
+    //搜索功能
+    private void queryBooks(String searchString) {
+        progressDialog = new ProgressDialog(this);
+        progressDialog.setMessage("正在搜索...");
+        progressDialog.show();
+
+        String urlString = "";
+        try {
+            urlString = URLEncoder.encode(searchString, "UTF-8");
+        } catch (UnsupportedEncodingException e) {
+            e.printStackTrace();
+            Toast.makeText(this, "Error" + e.getMessage(), Toast.LENGTH_LONG).show();
+        }
+
+        AsyncHttpClient client = new AsyncHttpClient();
+
+        client.get(QUERY_URL + urlString, new JsonHttpResponseHandler() {
+            @Override
+            public void onSuccess(JSONObject jsonObject) {
+                if (progressDialog != null) {
+                    progressDialog.dismiss();
+                }
+
+                Toast.makeText(getApplicationContext(), "Success!", Toast.LENGTH_LONG).show();
+//                Log.d("omg android", jsonObject.toString());
+                mJsonAdapter.updateData(jsonObject.optJSONArray("docs"));
+            }
+
+            @Override
+            public void onFailure(int statusCode, Throwable throwable, JSONObject error) {
+                if (progressDialog != null) {
+                    progressDialog.dismiss();
+                }
+
+                Toast.makeText(getApplicationContext(), "Error: " + statusCode + " " + throwable.getMessage(), Toast.LENGTH_LONG).show();
+                Log.e("omg android", statusCode + " " + throwable.getMessage());
+            }
+        });
     }
 }
