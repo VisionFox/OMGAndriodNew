@@ -150,6 +150,14 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 //       ver1.0遗留
 //        Log.d("omg android", position + " : " + mNameList.get(position));
 
+        JSONObject jsonObject = (JSONObject) mJsonAdapter.getItem(position);
+        String coverID = jsonObject.optString("cover_i", "");
+
+        Intent detailIntent = new Intent(this, DetailActivity.class);
+
+        detailIntent.putExtra("coverID", coverID);
+
+        startActivity(detailIntent);
     }
 
     //分享功能

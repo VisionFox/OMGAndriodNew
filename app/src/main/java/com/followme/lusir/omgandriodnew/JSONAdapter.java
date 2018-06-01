@@ -71,7 +71,7 @@ public class JSONAdapter extends BaseAdapter {
         if (jsonObject.has("cover_i")) {
             String imageID = jsonObject.optString("cover_i");
 
-            String imageURL = IMAGE_URL_BASE + imageID + "-S.jpg";
+            String imageURL = IMAGE_URL_BASE + imageID + "-L.jpg";
 
             Picasso.with(mContext).load(imageURL).placeholder(R.drawable.ic_books).into(holder.thumbnailImageView);
 
